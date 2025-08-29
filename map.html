@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>苏运新航·运河文化调研地图</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- 聚合插件 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { width: 100%; height: 100%; }
+
+    .info-title { font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
+    .popup-img {
+      width: 220px; height: 130px; object-fit: cover;
+      margin-top: 8px; border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+
+    .fa-marker{
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px; font-weight: 700;
+      border: 2px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    .legend, .fit-btn, .filter-box, .edit-box {
+      background: #fff; padding: 8px 12px; border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15); font-size: 14px;
+    }
+    .legend .row{ display:flex; align-items:center; margin:4px 0; gap:8px; }
+    .legend .dot{
+      width: 16px; height: 16px; border-radius: 50%;
+      display:inline-block; border:1.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+
+    .fit-btn, .edit-box { cursor: pointer; }
+    .fit-btn:hover, .filter-box:hover, .edit-box:hover{ background:#f6f8fa; }
+
+    .filter-box select{ border:none; outline:none; font-size:14px; background:transparent; }
+    
+    .edit-actions{ display:flex; gap:8px; align-items:center; }
+    .edit-actions button{
+      border:none; border-radius:6px; padding:6px 10px; cursor:pointer;
+      background:#2563eb; color:#fff; box-shadow:0 1px 6px rgba(0,0,0,.2);
+    }
+    .edit-actions button.secondary{ background:#0f766e; }
+    .edit-actions button.active{ background:#dc2626; }
+    .edit-indicator{ font-size:12px; color:#0f766e; font-weight:700; }
+    
+    /* 地图切换控件样式 */
+    .tile-switcher {
+      background: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15);
+      font-size: 13px;
+    }
+    .tile-switcher button {
+      border: none;
+      background: transparent;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .tile-switcher button.active {
+      background: #2563eb;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // ============== 初始化 ==============
+    const map = L.map('map').setView([32.9, 119.6], 8);
+
+    // ============== 地图源配置（仅保留稳定可用的地图） ==============
+    const tileLayers = {
+      gaode: L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        subdomains: "1234",
+        attribution: '© 高德地图'
+      }),
+      gaodeSatellite: L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
+        subdomains: "1234",
+        attribution: '© 高德卫星地图'
+      })
+    };
+    
+    let currentTileLayer = tileLayers.gaode.addTo(map);
+
+    // ============== 核心变量管理 ==============
+    let markerCluster = L.markerClusterGroup({
+      disableClusteringAtZoom: 14,
+      showCoverageOnHover: false
+    }).addTo(map);
+    
+    let allMarkers = [];
+    let editMode = false;
+
+    // ============== 图标样式 ==============
+    const typeStyles = {
+      museum:  { color: '#3B82F6', iconClass: 'fa-landmark', label:'博物馆/展馆' },
+      bridge:  { color: '#F59E0B', iconClass: 'fa-bridge',   label:'桥梁' },
+      landmark:{ color: '#10B981', iconClass: 'fa-location-dot', label:'街区/河段/塔楼' }
+    };
+    function iconFor(type){
+      const t = typeStyles[type] || typeStyles.landmark;
+      return L.divIcon({
+        html: `<div class="fa-marker" style="background:${t.color}">
+                 <i class="fa-solid ${t.iconClass}"></i>
+               </div>`,
+        className: '',
+        iconSize: [34,34], iconAnchor: [17,17], popupAnchor:[0,-10]
+      });
+    }
+
+    // ============== 数据点 ==============
+    const places = [
+      // 淮安
+      { id:'HA_QJZ', name:"清江闸遗址", city:"淮安", type:"landmark", 
+        coords:[33.612245, 119.022138], 
+        desc:"明永乐年间建造，大运河重要水利枢纽，至今仍可见其历史风貌。", // 43字
+        img:"Imgs/地图地点/清江闸遗址/R-C.jpg" },
+
+      { id:'HA_CYB', name:"中国漕运博物馆", city:"淮安", type:"museum", 
+        coords:[33.618752, 119.023741], 
+        desc:"全国唯一漕运专题博物馆，系统展示漕运历史与制度演变。", // 39字
+        img:"Imgs/地图地点/中国漕运博物馆/OIP-C.webp" },
+
+      // 扬州
+      { id:'YZ_CGCM', name:"中国大运河博物馆", city:"扬州", type:"museum", 
+        coords:[32.367589, 119.444672], 
+        desc:"国家一级博物馆，通过丰富展品展现大运河千年发展历程。", // 40字
+        img:"Imgs/地图地点/中国大运河博物馆/R-C.png" },
+
+      { id:'YZ_SBSZ', name:"邵伯船闸", city:"扬州", type:"landmark", 
+        coords:[32.550763, 119.323185], 
+        desc:"大运河重要通航设施，见证航运技术发展，至今仍在使用。", // 39字
+        img:"Imgs/地图地点/邵伯船闸/3b478d09a87445a1a78597268a73b61b.jpg" },
+
+      { id:'YZ_JYQ', name:"今月桥", city:"扬州", type:"bridge", 
+        coords:[32.366892, 119.445187], 
+        desc:"运河博物馆前景观桥，造型优美，与博物馆建筑风格相呼应。", // 42字
+        img:"Imgs/地图地点/今月桥/79.jpg" },
+
+      { id:'YZ_DYT', name:"大运塔", city:"扬州", type:"landmark", 
+        coords:[32.368876, 119.446689], 
+        desc:"三湾生态文化公园标志性建筑，登塔可俯瞰运河全景。", // 37字
+        img:"Imgs/地图地点/大运塔/OIP-C.webp" },
+
+      { id:'YZ_WFT', name:"文峰塔", city:"扬州", type:"landmark", 
+        coords:[32.392685, 119.449762], 
+        desc:"明代古塔，运河畔重要航标，“三塔映三湾”景观组成部分。", // 40字
+        img:"Imgs/地图地点/文峰塔/10090g0000007rzwa56B0.jpg" },
+
+      { id:'YZ_TZT', name:"天中塔", city:"扬州", type:"landmark", 
+        coords:[32.388864, 119.451873], 
+        desc:"古运河畔历史塔楼，与文峰塔、大运塔形成文化景观轴线。", // 40字
+        img:"Imgs/地图地点/天中塔/OIP-C.webp" },
+
+      { id:'YZ_HYSJ', name:"淮扬商街", city:"扬州", type:"landmark", 
+        coords:[32.366087, 119.444065], 
+        desc:"复原运河两岸商贸街区风貌，展现淮扬地区市井文化。", // 38字
+        img:"Imgs/地图地点/淮扬商街/OIP-C.webp" },
+
+      { id:'YZ_YSZZ', name:"盐商住宅", city:"扬州", type:"landmark", 
+        coords:[32.366375, 119.443582], 
+        desc:"展示清代盐商宅邸建筑特色，反映扬州盐业鼎盛历史。", // 38字
+        img:"Imgs/地图地点/盐商住宅/100l14000000w7e5b19ED.jpg" },
+
+      // 常州
+      { id:'CZ_QGX', name:"青果巷历史文化街区", city:"常州", type:"landmark", 
+        coords:[31.809873, 119.974765], 
+        desc:"明代古巷，孕育众多历史名人，被誉为“江南名士第一巷”。", // 40字
+        img:"Imgs/地图地点/青果巷历史文化街区/781364_20210625103138554020_0.jpg" },
+
+      { id:'CZ_WHQ', name:"文亨桥", city:"常州", type:"bridge", 
+        coords:[31.812364, 119.972681], 
+        desc:"三孔石拱桥，《红楼梦》中提及，是运河重要文化遗产。", // 37字
+        img:"Imgs/地图地点/文亨桥/12259251_211150527160_2.jpg" },
+
+      { id:'CZ_XFQ', name:"新坊桥", city:"常州", type:"bridge", 
+        coords:[31.812876, 119.973958], 
+        desc:"始建于唐代，多次重修，见证常州运河航运变迁史。", // 35字
+        img:"Imgs/地图地点/新坊桥/R-C.jpg" },
+
+      { id:'CZ_SLZ', name:"石龙嘴", city:"常州", type:"landmark", 
+        coords:[31.816582, 119.969374], 
+        desc:"运河与护城河交汇处，古桥云集，形成独特水利景观。", // 37字
+        img:"Imgs/地图地点/石龙嘴/OIP-C.webp" },
+
+      { id:'CZ_NSH', name:"南市河段", city:"常州", type:"landmark", 
+        coords:[31.817865, 119.971183], 
+        desc:"常州运河历史风貌保存完好的河段，城河相依景观独特。", // 39字
+        img:"Imgs/地图地点/南市河段/OIP-C.webp" }
+    ];
+
+    // ============== 标注创建与弹窗内容 ==============
+    function popupHtml(p){
+      return `
+        <div class="info-title">${p.name}</div>
+        <b>城市：</b>${p.city}<br>
+        <b>简介：</b>${p.desc}<br>
+        <img src="${p.img}" alt="${p.name}" class="popup-img"/>
+        <div style="margin-top:6px; font-size:12px; color:#6b7280;">
+          <span>坐标：${p.coords[0].toFixed(6)}, ${p.coords[1].toFixed(6)}</span>
+        </div>
+      `;
+    }
+
+    function createMarker(p){
+      const mk = L.marker(p.coords, {
+        icon: iconFor(p.type),
+        draggable: editMode
+      });
+      
+      mk.bindPopup(popupHtml(p));
+      
+      mk.on('dragend', function(e) {
+        const latlng = e.target.getLatLng();
+        const place = places.find(place => place.id === p.id);
+        if (place) {
+          place.coords = [latlng.lat, latlng.lng];
+          e.target.setPopupContent(popupHtml(place));
+        }
+      });
+      
+      return mk;
+    }
+
+    // ============== 标注渲染与聚合 ==============
+    function renderMarkers(city="全部", type="全部"){
+      markerCluster.clearLayers();
+      allMarkers = [];
+      
+      const filtered = places.filter(p=>{
+        return (city==="全部"||p.city===city) && (type==="全部"||p.type===type);
+      });
+
+      const bounds = [];
+      filtered.forEach(p=>{
+        const mk = createMarker(p);
+        markerCluster.addLayer(mk);
+        allMarkers.push(mk);
+        bounds.push(p.coords);
+      });
+
+      if(bounds.length) map.fitBounds(bounds,{padding:[30,30]});
+    }
+
+    // 初始渲染
+    renderMarkers();
+
+    // ============== 路线连线 ==============
+    const cityOrder = ["淮安","扬州","常州"];
+    const routePoints = cityOrder.map(city => {
+      const cityPoint = places.find(p => p.city === city && (p.type === "museum" || p.type === "landmark"));
+      return cityPoint ? cityPoint.coords : null;
+    }).filter(Boolean);
+    L.polyline(routePoints, {color:"#2563eb", weight:3, dashArray:"6,6", opacity:0.8}).addTo(map);
+
+    // ============== 控件功能 ==============
+    // 图例
+    const legend = L.control({ position:'bottomright' });
+    legend.onAdd = function(){
+      const div = L.DomUtil.create('div','legend');
+      div.innerHTML = `
+        <div class="row"><span class="dot" style="background:${typeStyles.museum.color}"></span>博物馆/展馆</div>
+        <div class="row"><span class="dot" style="background:${typeStyles.bridge.color}"></span>桥梁</div>
+        <div class="row"><span class="dot" style="background:${typeStyles.landmark.color}"></span>街区/河段/塔楼</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+
+    // 缩放按钮
+    const fitBtn = L.control({ position:'topleft' });
+    fitBtn.onAdd = function(){
+      const div = L.DomUtil.create('div','fit-btn');
+      div.innerHTML = "缩放至全部点";
+      div.onclick = ()=>renderMarkers();
+      return div;
+    };
+    fitBtn.addTo(map);
+
+    // 筛选框
+    const filterBox = L.control({ position:'topleft' });
+    filterBox.onAdd = function(){
+      const div = L.DomUtil.create('div','filter-box');
+      div.innerHTML = `
+        城市：
+        <select id="cityFilter">
+          <option>全部</option>
+          <option>淮安</option>
+          <option>扬州</option>
+          <option>常州</option>
+        </select>
+        类型：
+        <select id="typeFilter">
+          <option>全部</option>
+          <option value="museum">博物馆/展馆</option>
+          <option value="bridge">桥梁</option>
+          <option value="landmark">街区/河段/塔楼</option>
+        </select>
+      `;
+      return div;
+    };
+    filterBox.addTo(map);
+
+    document.addEventListener('change', e=>{
+      const city = document.getElementById("cityFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      renderMarkers(city,type);
+    });
+
+    // 地图切换控件
+    const tileSwitcher = L.control({ position: 'topright' });
+    tileSwitcher.onAdd = function() {
+      const div = L.DomUtil.create('div', 'tile-switcher');
+      div.innerHTML = `
+        <button class="active" data-tile="gaode">高德地图</button>
+        <button data-tile="gaodeSatellite">卫星地图</button>
+      `;
+      
+      div.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const tileType = this.getAttribute('data-tile');
+          map.removeLayer(currentTileLayer);
+          currentTileLayer = tileLayers[tileType].addTo(map);
+          div.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+      
+      return div;
+    };
+    tileSwitcher.addTo(map);
+
+    // 精修模式 & 导出坐标
+    const editBox = L.control({ position:'topleft' });
+    editBox.onAdd = function(){
+      const div = L.DomUtil.create('div','edit-box');
+      div.innerHTML = `
+        <div class="edit-actions">
+          <button id="toggleEdit">精修模式：关闭</button>
+          <button id="exportJson" class="secondary">导出坐标 JSON</button>
+        </div>
+        <div class="edit-indicator" id="editHint" style="display:none;">提示：拖拽标记以微调坐标</div>
+      `;
+      return div;
+    };
+    editBox.addTo(map);
+
+    const toggleEditBtn = document.getElementById('toggleEdit');
+    const editHint = document.getElementById('editHint');
+
+    function setEditMode(on){
+      editMode = on;
+      toggleEditBtn.textContent = `精修模式：${on ? '开启' : '关闭'}`;
+      toggleEditBtn.classList.toggle('active', on);
+      editHint.style.display = on ? 'block' : 'none';
+      
+      const currentCity = document.getElementById("cityFilter").value;
+      const currentType = document.getElementById("typeFilter").value;
+      renderMarkers(currentCity, currentType);
+      
+      if (on) {
+        map.setZoom(13);
+      }
+    }
+
+    toggleEditBtn.addEventListener('click', () => {
+      setEditMode(!editMode);
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+      const data = JSON.stringify(places, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '苏运新航调研点坐标.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
+    

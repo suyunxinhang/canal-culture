@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运河之声 | 水脉承韵 苏运焕新</title>
+    <link rel="icon" type="image/x-icon" href="Imgs/favicon.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 子页面专属样式 */
+        .voice-hero {
+            background: url('Imgs/城市地点/淮安1.jpg') center center/cover no-repeat;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .voice-hero::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(44, 62, 80, 0.6);
+        }
+        .voice-hero .container {
+            position: relative;
+            z-index: 2;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .voice-hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .voice-hero p {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* 声音卡片样式 */
+        .voice-section {
+            padding: 60px 0;
+        }
+        .voice-card-group {
+            margin-bottom: 80px;
+        }
+        .voice-card-group h3 {
+            text-align: center;
+            color: var(--canal-dark);
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        .voice-card-group h3::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--accent-color);
+        }
+
+        .voice-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+        .voice-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px;
+            border-left: 5px solid var(--canal-blue);
+            position: relative;
+            transition: transform 0.3s;
+        }
+        .voice-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .voice-card::before {
+            content: '"';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            font-size: 4rem;
+            color: var(--canal-light);
+            font-family: Georgia, serif;
+            opacity: 0.6;
+        }
+        .voice-content {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 20px;
+            padding-left: 10px;
+        }
+        .voice-source {
+            text-align: right;
+            color: var(--canal-dark);
+            font-weight: 500;
+            font-style: italic;
+        }
+        .voice-source i {
+            margin-right: 8px;
+            color: var(--accent-color);
+        }
+
+        /* 古今对话样式 */
+        .dialogue-section {
+            background: linear-gradient(to bottom, #f8fafc, #e6f7ff);
+            padding: 60px 0;
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+        .dialogue-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .dialogue-header h3 {
+            font-size: 2rem;
+            color: var(--canal-dark);
+            margin-bottom: 15px;
+        }
+        .dialogue-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #64748b;
+        }
+
+        .dialogue-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .dialogue-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px;
+            transition: transform 0.3s;
+        }
+        .dialogue-card:hover {
+            transform: translateY(-5px);
+        }
+        .dialogue-card h4 {
+            color: var(--canal-dark);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .dialogue-card h4 i {
+            margin-right: 12px;
+            color: var(--accent-color);
+            font-size: 1.5rem;
+        }
+        .dialogue-card p {
+            color: #444;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        .dialogue-card ul {
+            padding-left: 20px;
+            color: #444;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        .dialogue-card ul li {
+            margin-bottom: 10px;
+        }
+        .data-highlight {
+            background: rgba(82, 179, 217, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--canal-blue);
+            margin-top: 20px;
+        }
+        .data-highlight p {
+            color: var(--canal-dark);
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        /* 返回首页按钮 */
+        .back-home {
+            text-align: center;
+            margin: 50px 0 30px;
+        }
+        .back-btn {
+            background: var(--canal-dark);
+            padding: 12px 25px;
+            font-size: 1rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header>
+        <div class="container header-content" style="max-width: 1300px;">
+            <div class="logo">
+                <i class="fas fa-water logo-icon"></i>
+                <h1>水脉承韵 苏运焕新</h1>
+            </div>
+            <div class="nav-container">
+                <nav>
+                  <ul>
+                      <li><a href="index.html">首页</a></li>
+                      <li><a href="index.html#bridges-map">运河桥梁文化</a></li>
+                      <li><a href="index.html#cities">走访城市</a></li>
+                      <li><a href="index.html#history">实践历程</a></li>
+                      <li><a href="index.html#video">视频展示</a></li>
+                      <li><a href="index.html#achievements">成果展示</a></li>
+                      <li><a href="index.html#team">团队成员</a></li>
+                      <li><a href="index.html#contact">联系我们</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 英雄区域 -->
+    <section class="voice-hero">
+        <div class="container">
+            <h2>运河之声 | 来自岸边的对话与思考</h2>
+            <p>这些声音来自船闸所长、老街店主、本地居民和远方游客，它们拼凑出运河最真实的当代图景；而古今智慧的碰撞，正为运河文化注入新的生命力。</p>
+            <a href="#voice-content" class="btn">聆听声音</a>
+        </div>
+    </section>
+
+    <!-- 运河之声内容区 -->
+    <section class="voice-section container" id="voice-content">
+        <!-- 第一组：关于保护与开发 -->
+        <div class="voice-card-group">
+            <h3>关于保护与开发</h3>
+            <div class="voice-cards">
+                <div class="voice-card">
+                    <div class="voice-content">
+                        希望商业化不要太重，不要到处都是千篇一律的奶茶店和义乌小商品。运河边的店铺，应该有点运河的味道。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>常州青果巷，茶馆店主
+                    </div>
+                </div>
+                <div class="voice-card">
+                    <div class="voice-content">
+                        老房子破破烂烂的肯定不行，但全拆了盖新的，那就没了灵魂。最好是能修旧如旧，让我们还能找到以前的记忆。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>淮安，运河周边老居民
+                    </div>
+                </div>
+                <div class="voice-card">
+                    <div class="voice-content">
+                        保护和发展不应该是选择题。用新技术让年轻人喜欢来这里，了解历史，消费文化，形成良性循环，这才是最好的保护。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>扬州，文化学者（访谈对象）
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二组：关于认知与情感 -->
+        <div class="voice-card-group">
+            <h3>关于认知与情感</h3>
+            <div class="voice-cards">
+                <div class="voice-card">
+                    <div class="voice-content">
+                        我就生在运河边，长在运河边。它就像个老邻居，习惯了它的存在，但具体它过去有多辉煌，说实话我们小年轻也不太清楚。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>扬州，本地年轻人
+                    </div>
+                </div>
+                <div class="voice-card">
+                    <div class="voice-content">
+                        我是从历史书上知道京杭大运河的，但只有站在船闸边上，听到水声、汽笛声，才能感受到那种跨越千年的磅礴力量。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>上海，来访游客
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三组：关于科技与体验 -->
+        <div class="voice-card-group">
+            <h3>关于科技与体验</h3>
+            <div class="voice-cards">
+                <div class="voice-card">
+                    <div class="voice-content">
+                        AR、VR这些技术很好，很吸引人。但关键是内容要做深，不能只是噱头。要能真的讲出运河的故事。
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>中国大运河博物馆，观众
+                    </div>
+                </div>
+                <div class="voice-card">
+                    <div class="voice-content">
+                        以前觉得船闸就是个水利单位，没想到这么高科技，还能进来参观学习，这一趟带孩子来得值！
+                    </div>
+                    <div class="voice-source">
+                        <i class="fas fa-map-marker-alt"></i>邵伯船闸，研学团队家长
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 古今对话区域 -->
+    <section class="dialogue-section">
+        <div class="container">
+            <div class="dialogue-header">
+                <h3>古今对话 | 运河文化的当代价值重构</h3>
+                <p>传统水利智慧的现代转译，让千年运河在当代焕发新生</p>
+            </div>
+
+            <div class="dialogue-content">
+                <div class="dialogue-card">
+                    <h4><i class="fas fa-cogs"></i>技术原理的现代化改造</h4>
+                    <p>无锡梁溪河整治工程（2020-2022）对唐代"苇编沉排"技术的系统性升级，堪称传统工艺现代转型的典范。工程团队在保留传统工艺精髓的基础上，实现三大突破：</p>
+                    <ul>
+                        <li><strong>材料创新</strong>：研发高性能生态复合材料，抗拉强度达传统芦苇3倍，使用寿命延长至15年以上。</li>
+                        <li><strong>结构优化</strong>：采用航天三维编织技术，构建梯度孔隙率立体防护网，兼顾稳定性与生物栖息需求。</li>
+                        <li><strong>生态赋能</strong>：预置3D打印生态巢穴，定制孔径适配本土物种，成功吸引12种鱼类回归。</li>
+                    </ul>
+                    <div class="data-highlight">
+                        <p>改造成效：河岸侵蚀率下降62%，水体透明度提升40%，生物多样性指数从1.8跃升至3.2。</p>
+                    </div>
+                </div>
+
+                <div class="dialogue-card">
+                    <h4><i class="fas fa-lightbulb"></i>设计理念的拓展应用</h4>
+                    <p>古代运河智慧不仅限于水利工程，更在城市治理中绽放新价值：</p>
+                    <ul>
+                        <li><strong>苏州金鸡湖项目</strong>：将"弯道水力"原理应用于城市排水，设计"螺旋式"通道实现水沙分离，暴雨径流峰值延迟45分钟，悬浮物去除率达78%，获2022年国际水协会创新设计奖。</li>
+                        <li><strong>扬州数字孪生系统</strong>：编码古代河道管理经验为算法，结合BIM与物联网监测，构建虚实交融平台。管理人员可通过VR"穿越"历史场景，河道维护效率提升60%，应急响应时间缩短1/3。</li>
+                    </ul>
+                    <div class="data-highlight">
+                        <p>核心价值：传统智慧+现代科技=1+1>2的协同效应，为线性遗产保护提供"古今对话"新范式。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 返回首页按钮 -->
+    <div class="back-home">
+        <a href="index.html" class="btn back-btn">
+            <i class="fas fa-arrow-left"></i> 返回首页
+        </a>
+    </div>
+
+    <!-- 页脚 -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>关于我们</h3>
+                    <p>我们是一支致力于大运河文化保护与传播的大学生社会实践团队，通过实地走访调研，记录和传承运河文化，为线性遗产可持续利用提供青年视角与地方方案。</p>
+                </div>
+                <div class="footer-section">
+                    <h3>联系方式</h3>
+                    <p>邮箱：2819787690@qq.com</p>
+                    <p>地址：南京大学</p>
+                </div>
+                <div class="footer-section">
+                    <h3>关注我们</h3>
+                    <div class="social-icons">
+                        <a href="https://mp.weixin.qq.com/s?__biz=Mzg5MTU0NDIzOQ==&mid=2247502585&idx=1&sn=f85b70a20ae96cf1b1bb78f397ac895f&chksm=ce27353131debb6f137f5c96e31710c828c0b42c5206c2f3a169473ee65dfceda7ea0479ed5d&mpshare=1&scene=23&srcid=0814sRfQrz40st7plszhYQSC&sharer_shareinfo=2281aaf15fbe261435b5379f9adf84bc&sharer_shareinfo_first=e9d4137b5ffcf6c62008227eb68d100f#rd" target="_blank" title="阅读公众号文章，关注公众号查看更多运河文化内容" class="wechat-icon">
+                            <i class="fab fa-weixin" style="color: #07C160; font-size: 18px;"></i>
+                            <span class="wechat-qrcode">
+                                <img src="/Imgs/微信公众号.jpg" alt="微信公众号二维码">
+                            </span>
+                        </a>
+                        <!-- <a href="#"><i class="fab fa-weibo"></i></a> -->
+                        <a href="https://qm.qq.com/cgi-bin/qm/qr?k=oLln8nLP8IX-rkCgRAO7xyBmtIa6uLXu&jump_from=webapi&authKey=Yy9C6C7ryAlPihrfReK3OReImmChKkSprwoyt1L6XdVMTTILSzdE8RV6AaLu0Bj2" target="_blank" title="加入QQ群获取实践调研资料">
+                          <i class="fab fa-qq" style="color: #12B7F5; font-size: 18px;"></i>
+                        </a>
+                        <!-- <a href="#"><i class="fab fa-youtube"></i></a> -->
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 水脉承韵 苏运焕新 - 南京大学社会实践项目。保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="JavaScript/main.js"></script>
+</body>
+</html>
